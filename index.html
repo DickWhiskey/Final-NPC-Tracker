@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RuneQuest NPC Generator & Tracker</title>
+  <title>RuneQuest NPC Generator</title>
   <style>
     body {
       margin: 0;
@@ -44,16 +44,25 @@
     label {
       font-weight: bold;
       font-size: 0.85em;
+      display: block;
+      margin-bottom: 0.2em;
     }
 
-    input[type="number"] {
-      width: 70px;
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
       padding: 0.4em;
       border: 1px solid #444;
       border-radius: 4px;
       background-color: #2a2a2a;
       color: white;
-      font-size: 0.9em;
+      font-size: 0.85em;
+      margin-bottom: 0.4em;
+    }
+
+    input[readonly] {
+      background-color: #333;
+      color: #aaa;
     }
 
     button {
@@ -102,6 +111,12 @@
       margin-bottom: 0.5em;
     }
 
+    .hit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4em;
+    }
+
     .grid-3col {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -110,18 +125,6 @@
 
     .static-info p {
       margin: 0.3em 0;
-      font-size: 0.85em;
-    }
-
-    input[type="text"],
-    .npc-card input[type="number"] {
-      width: 100%;
-      padding: 0.4em;
-      margin-bottom: 0.3em;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background-color: #2a2a2a;
-      color: white;
       font-size: 0.85em;
     }
   </style>
@@ -159,20 +162,26 @@
       const damageBonus = cr <= 5 ? "1D4" : "1D6";
       const magicPoints = cr;
 
+      const hitSection = (loc, hp) => `
+        <label>${loc} (Max):</label><input type="number" value="${hp}" readonly>
+        <label>${loc} (Current):</label><input type="number" value="${hp}">
+      `;
+
       const npcHTML = `
         <div class="npc-card">
           <h2>NPC (CR ${cr})</h2>
-          <label>NPC Name:</label>
-          <input type="text" placeholder="Name NPC" />
+          <label>Name:</label><input type="text" placeholder="Name NPC" />
 
-          <div class="section-title">Hit Points</div>
-          <label>Right Leg:</label><input type="number" value="${hpOther}">
-          <label>Left Leg:</label><input type="number" value="${hpOther}">
-          <label>Abdomen:</label><input type="number" value="${hpOther}">
-          <label>Chest:</label><input type="number" value="${hpChest}">
-          <label>Right Arm:</label><input type="number" value="${hpArms}">
-          <label>Left Arm:</label><input type="number" value="${hpArms}">
-          <label>Head:</label><input type="number" value="${hpOther}">
+          <div class="section-title">Hit Locations</div>
+          <div class="hit-grid">
+            ${hitSection("Right Leg", hpOther)}
+            ${hitSection("Left Leg", hpOther)}
+            ${hitSection("Abdomen", hpOther)}
+            ${hitSection("Chest", hpChest)}
+            ${hitSection("Right Arm", hpArms)}
+            ${hitSection("Left Arm", hpArms)}
+            ${hitSection("Head", hpOther)}
+          </div>
 
           <div class="section-title">Combat & Skills</div>
           <div class="static-info">
