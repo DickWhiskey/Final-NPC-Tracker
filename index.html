@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RuneQuest NPC Generator & Tracker</title>
+  <title>RuneQuest NPC Tracker</title>
   <style>
     body {
       margin: 0;
@@ -13,64 +13,37 @@
       font-family: 'Segoe UI', sans-serif;
     }
 
-    .container {
-      max-width: 960px;
-      margin: auto;
+    .header {
       text-align: center;
+      margin-bottom: 1em;
     }
 
-    .generator-box {
-      background-color: #1e1e1e;
-      padding: 1em;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      margin-bottom: 1.5em;
-      display: inline-block;
-    }
-
-    h1 {
-      margin-bottom: 0.5em;
-      color: #ffffff;
-    }
-
-    .controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5em;
-      margin-top: 0.5em;
-    }
-
-    label {
-      font-weight: bold;
-      font-size: 0.85em;
-    }
-
-    input[type="number"] {
-      width: 70px;
+    .header input {
+      width: 60px;
       padding: 0.4em;
-      border: 1px solid #444;
+      margin-left: 0.5em;
       border-radius: 4px;
+      border: 1px solid #444;
       background-color: #2a2a2a;
-      color: white;
-      font-size: 0.9em;
+      color: #fff;
     }
 
     button {
-      padding: 0.6em 1.2em;
+      padding: 0.5em 1em;
       font-size: 0.9em;
       background-color: #007acc;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      margin-left: 0.5em;
     }
 
     button:hover {
       background-color: #005fa3;
     }
 
-    .npc-grid {
+    .npc-container {
       display: flex;
       flex-wrap: wrap;
       gap: 1em;
@@ -79,68 +52,87 @@
 
     .npc-card {
       background-color: #1e1e1e;
-      padding: 1em;
       border-radius: 10px;
+      padding: 1em;
       width: 280px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
       font-size: 0.85em;
-      text-align: left;
+      position: relative;
     }
 
     .npc-card h2 {
-      color: #00bfff;
-      font-size: 1.2em;
       margin-top: 0;
+      font-size: 1.1em;
+      text-align: center;
+    }
+
+    .npc-card label {
+      font-weight: bold;
+      margin-top: 0.5em;
+      display: block;
+    }
+
+    .npc-card input[type="text"],
+    .npc-card input[type="number"] {
+      width: 100%;
+      padding: 0.3em;
+      margin-bottom: 0.4em;
+      background-color: #2a2a2a;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-size: 0.85em;
     }
 
     .section-title {
-      font-weight: bold;
-      color: #cccccc;
+      margin-top: 1em;
       border-bottom: 1px solid #444;
-      padding-bottom: 0.25em;
-      margin-top: 0.75em;
-      margin-bottom: 0.5em;
+      color: #cccccc;
+      font-weight: bold;
+      margin-bottom: 0.4em;
     }
 
-    .grid-3col {
+    .hit-locations {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0.4em;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.3em;
     }
 
-    .static-info p {
-      margin: 0.3em 0;
-      font-size: 0.85em;
+    .hit-locations label {
+      font-weight: normal;
     }
 
-    input[type="text"],
-    .npc-card input[type="number"] {
-      width: 100%;
-      padding: 0.4em;
-      margin-bottom: 0.3em;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background-color: #2a2a2a;
+    .delete-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #cc3333;
       color: white;
-      font-size: 0.85em;
+      border: none;
+      padding: 0.2em 0.6em;
+      border-radius: 4px;
+      font-size: 0.75em;
+      cursor: pointer;
+    }
+
+    .delete-button:hover {
+      background-color: #aa0000;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>RuneQuest NPC Generator</h1>
-    <div class="generator-box">
-      <label for="cr">CR (0–10):</label>
-      <div class="controls">
-        <input type="number" id="cr" min="0" max="10" value="4" />
-        <button onclick="generateNPC()">Generate NPC</button>
-      </div>
-    </div>
 
-    <div class="npc-grid" id="npcGrid"></div>
+  <div class="header">
+    <label for="cr">CR:</label>
+    <input type="number" id="cr" min="0" max="10" value="4" />
+    <button onclick="generateNPC()">Add NPC</button>
   </div>
 
+  <div class="npc-container" id="npcContainer"></div>
+
   <script>
+    let npcCount = 0;
+
     function generateNPC() {
       const cr = parseInt(document.getElementById("cr").value);
       if (isNaN(cr) || cr < 0 || cr > 10) {
@@ -159,55 +151,53 @@
       const damageBonus = cr <= 5 ? "1D4" : "1D6";
       const magicPoints = cr;
 
-      const npcHTML = `
-        <div class="npc-card">
-          <h2>NPC (CR ${cr})</h2>
-          <label>NPC Name:</label>
-          <input type="text" placeholder="Name NPC" />
+      const npcId = `npc${++npcCount}`;
 
-          <div class="section-title">Hit Points</div>
-          <label>Right Leg:</label><input type="number" value="${hpOther}">
-          <label>Left Leg:</label><input type="number" value="${hpOther}">
-          <label>Abdomen:</label><input type="number" value="${hpOther}">
-          <label>Chest:</label><input type="number" value="${hpChest}">
-          <label>Right Arm:</label><input type="number" value="${hpArms}">
-          <label>Left Arm:</label><input type="number" value="${hpArms}">
-          <label>Head:</label><input type="number" value="${hpOther}">
+      const locations = [
+        { name: "Left Leg", range: "1–4", hp: hpOther },
+        { name: "Right Leg", range: "5–8", hp: hpOther },
+        { name: "Abdomen", range: "9–11", hp: hpOther },
+        { name: "Chest", range: "12", hp: hpChest },
+        { name: "Left Arm", range: "13–15", hp: hpArms },
+        { name: "Right Arm", range: "16–18", hp: hpArms },
+        { name: "Head", range: "19–20", hp: hpOther }
+      ];
 
-          <div class="section-title">Combat & Skills</div>
-          <div class="static-info">
-            <p><strong>Strike Rank:</strong> ${strikeRank}</p>
-            <p><strong>Damage Bonus:</strong> +${damageBonus}</p>
-            <p><strong>Key Skills:</strong> ~${baseSkill}%</p>
-            <p><strong>Magic Points:</strong> ${magicPoints}</p>
-          </div>
-
-          <div class="section-title">Weapons & Shield</div>
-          <label>Weapon 1:</label><input type="text" placeholder="Name">
-          <div class="grid-3col">
-            <input type="number" placeholder="Total HP">
-            <input type="number" placeholder="Current HP">
-            <input type="text" placeholder="Notes">
-          </div>
-
-          <label>Weapon 2:</label><input type="text" placeholder="Name">
-          <div class="grid-3col">
-            <input type="number" placeholder="Total HP">
-            <input type="number" placeholder="Current HP">
-            <input type="text" placeholder="Notes">
-          </div>
-
-          <label>Shield:</label><input type="text" placeholder="Name">
-          <div class="grid-3col">
-            <input type="number" placeholder="Total HP">
-            <input type="number" placeholder="Current HP">
-            <input type="text" placeholder="Notes">
-          </div>
+      let hitLocHTML = locations.map(loc => `
+        <label>${loc.name} (${loc.range})</label>
+        <div>
+          <input type="number" value="${loc.hp}" readonly />
+          <input type="number" placeholder="Current HP" />
+          <input type="number" placeholder="Armor" />
         </div>
+      `).join('');
+
+      const npcCard = document.createElement("div");
+      npcCard.className = "npc-card";
+      npcCard.id = npcId;
+      npcCard.innerHTML = `
+        <button class="delete-button" onclick="document.getElementById('${npcId}').remove()">X</button>
+        <h2>NPC (CR ${cr})</h2>
+        <input type="text" placeholder="Name" />
+        <div class="section-title">Hit Locations</div>
+        <div class="hit-locations">${hitLocHTML}</div>
+
+        <div class="section-title">Weapons & Shield</div>
+        <input type="text" placeholder="Weapon Name" />
+        <input type="number" placeholder="Weapon HP" />
+        <input type="text" placeholder="Shield Name" />
+        <input type="number" placeholder="Shield HP" />
+
+        <div class="section-title">Combat & Skills</div>
+        <p><strong>Strike Rank:</strong> ${strikeRank}</p>
+        <p><strong>Damage Bonus:</strong> +${damageBonus}</p>
+        <p><strong>Key Skills:</strong> ~${baseSkill}%</p>
+        <p><strong>Magic Points:</strong> ${magicPoints}</p>
       `;
 
-      document.getElementById("npcGrid").insertAdjacentHTML('beforeend', npcHTML);
+      document.getElementById("npcContainer").appendChild(npcCard);
     }
   </script>
+
 </body>
 </html>
